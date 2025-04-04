@@ -13,19 +13,27 @@ NUM_TOKENS = 125
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def _generate_summary(input_text):
-    gpt3_prompt = SUMMARIZE_PREFIX + input_text + TLDR_POSTFIX
-    response = openai.Completion.create(
-        engine=ENGINE,
-        prompt=gpt3_prompt,
+    # Define the messages for the chat completion
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that summarizes text."},
+        {"role": "user", "content": SUMMARIZE_PREFIX + input_text + TLDR_POSTFIX}
+    ]
+
+    # Create a chat completion request
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # Use the appropriate model name
+        messages=messages,
         temperature=0,
         max_tokens=NUM_TOKENS,
         top_p=1.0,
         frequency_penalty=1.0,
         presence_penalty=1.0
     )
-    batch_summary = response["choices"][0]["text"]
 
-    return post_processing(response_text = batch_summary)
+    # Extract the summary from the response
+    batch_summary = response["choices"][0]["message"]["content"]
+
+    return post_processing(response_text=batch_summary)
 
 def process_in_batches(input_text):
   sentences = nltk.tokenize.sent_tokenize(input_text)
